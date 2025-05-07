@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Chatbot</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        body {
+            font-family: 'Poppins', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #74ebd5, #acb6e5);
+            transition: background 0.3s;
+            padding: 20px;
+        }
+        body.dark-mode {
+            background: linear-gradient(135deg, #2c3e50, #4ca1af);
+        }
+        .chat-container {
+            width: 100%;
+            max-width: 450px;
+            background: #fff;
+            border-radius: 15px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            height: 85vh;
+            overflow: hidden;
+            transition: background 0.3s;
+        }
+        .dark-mode .chat-container {
+            background: #1e2a44;
+        }
+        .chat-header {
+            background: #007bff;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-top-left-radius: 15px;
+            border-top-right-radius: 15px;
+            font-size: 1.3em;
+            font-weight: 500;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .theme-toggle, .clear-chat {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            padding: 8px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: background 0.2s;
+        }
+        .theme-toggle:hover, .clear-chat:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+        .chat-window {
+            flex: 1;
+            padding: 20px;
+            overflow-y: auto;
+            background: #f9f9f9;
+            scroll-behavior: smooth;
+        }
+        .dark-mode .chat-window {
+            background: #2a3b5e;
+        }
+        .message {
+            display: flex;
+            align-items: flex-start;
+            margin: 15px 0;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .message .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            margin: 0 10px;
+            background: #ddd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2em;
+        }
+        .user-message .avatar {
+            background: #007bff;
+            color: white;
+        }
+        .bot-message .avatar {
+            background: #28a745;
+            color: white;
+        }
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 10px;
+            position: relative;
+            font-size: 0.95em;
+        }
+        .user-message .message-content {
+            background: #007bff;
+            color: white;
+            margin-left: auto;
+            border-bottom-right-radius: 2px;
+        }
+        .bot-message .message-content {
+            background: #e9ecef;
+            color: #333;
+            border-bottom-left-radius: 2px;
+        }
+        .dark-mode .bot-message .message-content {
+            background: #3b4b6e;
+            color: #e0e0e0;
+        }
+        .timestamp {
+            font-size: 0.75em;
+            color: #666;
+            margin-top: 5px;
+            display: block;
+        }
+        .dark-mode .timestamp {
+            color: #aaa;
+        }
+        .chat-input {
+            display: flex;
+            padding: 15px;
+            background: #fff;
+            border-top: 1px solid #ddd;
+            border-bottom-left-radius: 15px;
+            border-bottom-right-radius: 15px;
+        }
+        .dark-mode .chat-input {
+            background: #1e2a44;
+            border-top: 1px solid #3b4b6e;
+        }
+        input[type="text"] {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.95em;
+            transition: border 0.2s;
+        }
+        .dark-mode input[type="text"] {
+            background: #2a3b5e;
+            border: 1px solid #4b5e8e;
+            color: #e0e0e0;
+        }
+        input[type="text"]:focus {
+            border-color: #007bff;
+        }
+        button {
+            padding: 12px 20px;
+            margin-left: 10px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.95em;
+            transition: background 0.2s;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        button:hover:not(:disabled) {
+            background: #0056b3;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="chat-container">
+        <div class="chat-header">
+            <span>Alex's AI Chatbot</span>
+            <div>
+                <button class="clear-chat" onclick="clearChat()">Clear Chat</button>
+                <button class="theme-toggle" onclick="toggleTheme()">Dark Mode</button>
+            </div>
+        </div>
+        <div class="chat-window" id="chatWindow">
+            <div class="message bot-message">
+                <div class="avatar">🤖</div>
+                <div class="message-content">
+                    Hello! I'm Alex, your AI chatbot. Ask me about AI, engineering, hobbies, or anything fun! Try "what can I ask you" for ideas. What's something you're curious about today?
+                    <span class="timestamp"></span>
+                </div>
+            </div>
+        </div>
+        <div class="chat-input">
+            <input type="text" id="userInput" placeholder="Type your message..." autocomplete="off">
+            <button id="sendButton" onclick="sendMessage()" disabled>Send</button>
+        </div>
+    </div>
+
+    <script>
+        // Define response pairs: [regex pattern, array of responses, category]
+        const responsePairs = [
+            [/hi|hello|hey/i, ['Hello!', 'Hi there!', 'Hey, ready to talk tech or fun stuff?'], 'greeting'],
+            [/how are you|how's it going/i, ['I’m doing great, thanks!', 'Just chilling in the cloud, you?'], 'greeting'],
+            [/what is your name|who are you/i, ['I’m Alex, your friendly AI chatbot!', 'Call me Alex, built for AI and engineering awesomeness!'], 'self'],
+            [/what can you do|what do you do/i, ['I chat about AI, engineering, hobbies, weather, and more! Ask me about yourself or try "what can I ask you" for ideas!', 'I’m here to help with tech questions, motivation, or just fun chats!'], 'self'],
+            [/tell me about yourself|what are you/i, ['I’m Alex, a rule-based AI chatbot created for an Introduction to AI assignment at MIT Academy of Engineering, Pune! I’m built with HTML, CSS, and JavaScript to answer questions on AI, engineering (like transistors and routers), and fun stuff like cricket or motivation. Think of me as your study buddy, here to make learning tech and life a bit more exciting! What’s on your mind?'], 'self'],
+            [/what can i ask you|what should i ask/i, ['You can ask me about: AI (e.g., "what is AI"), engineering (e.g., "what are transistors"), hobbies (e.g., "what are some hobbies"), weather (e.g., "how’s the weather"), motivation (e.g., "I need motivation"), or fun facts (e.g., "tell me a fun fact")!'], 'self'],
+            [/bye|goodbye/i, ['See ya later!', 'Bye, keep engineering the future!'], 'greeting'],
+            [/what is ai|artificial intelligence/i, ['AI is intelligence shown by machines, like me! It’s about learning, reasoning, and problem-solving.', 'Artificial Intelligence lets computers mimic human thinking—think neural nets and chatbots!'], 'ai'],
+            [/what is machine learning/i, ['Machine learning is a part of AI where systems learn from data to make predictions or decisions.', 'It’s how I could get smarter over time, using algorithms and data!'], 'ai'],
+            [/why study ai/i, ['AI is the future! It powers everything from self-driving cars to smart assistants.', 'Studying AI opens doors to innovation in tech and engineering!'], 'ai'],
+            [/what are transistors/i, ['Transistors are tiny switches in electronics, controlling current flow. They’re the heart of computers!', 'Think of transistors as the building blocks of CPUs and circuits.'], 'engineering'],
+            [/what is a power supply/i, ['A power supply converts electricity to the right voltage for devices, like your laptop charger!', 'It’s critical in electronics to keep circuits running smoothly.'], 'engineering'],
+            [/how do routers work|what is a router/i, ['Routers direct data packets between networks, like a traffic cop for the internet!', 'They connect your devices to the web, ensuring data gets to the right place.'], 'engineering'],
+            [/what are adders|what is an adder/i, ['Adders are digital circuits that perform addition, key in computer arithmetic.', 'They’re used in CPUs to crunch numbers, like in your calculator!'], 'engineering'],
+            [/what are subtractors/i, ['Subtractors are circuits that perform subtraction, used in digital systems.', 'They help CPUs process math operations, like finding differences.'], 'engineering'],
+            [/modem|what is a modem/i, ['A modem converts digital signals to analog and vice versa, connecting you to the internet!', 'It’s the bridge between your home network and your ISP.'], 'engineering'],
+            [/what are some hobbies|hobbies/i, ['Hobbies? Try cricket, music, or coding! Cricket’s great for teamwork, music lifts the soul, and coding builds cool stuff like me!', 'You could pick up photography, gaming, or even circuit building—perfect for an engineering vibe!'], 'hobbies'],
+            [/how's the weather|weather/i, ['Weather’s always a mood-lifter! Imagine a sunny day in Pune—perfect for cricket! Want tips for rainy days?', 'I don’t have real-time weather, but I’d say it’s a great day to code indoors! What’s it like where you are?'], 'weather'],
+            [/i need motivation|motivate me/i, ['You got this! Every small step in your studies is building your future as an awesome engineer!', 'Tough day? Remember why you started—your passion for tech will change the world! Keep going!'], 'motivation'],
+            [/tell me a fun fact|fun fact/i, ['Did you know transistors in modern chips are smaller than a virus? Tech is wild!', 'Fun fact: The first computer “bug” was an actual insect stuck in a relay!'], 'funfact'],
+            [/what's up|whats up/i, ['Just hanging out in the digital world, ready to answer your questions!', 'Yo, what’s up with you? Got any cool projects or just chilling?'], 'greeting'],
+            [/.*/i, ['Hmm, not sure about that one. Try asking about AI, engineering, or something fun!', 'Could you rephrase? I’m ready to dive into tech or casual chats!'], 'default']
+        ];
+
+        // Define follow-up questions by category
+        const followUpQuestions = {
+            greeting: ['What’s something you’re curious about?', 'Got any cool projects on your mind?'],
+            self: ['Want to dive into AI or engineering?', 'What’s a topic you’re excited about?'],
+            ai: ['Curious about machine learning next?', 'Want to know why AI is so cool?'],
+            engineering: ['Want to know how another tech works?', 'Interested in circuits or networks?'],
+            hobbies: ['Feeling inspired to try a new hobby?', 'What’s a hobby you love?'],
+            weather: ['Or maybe a fun fact?', 'What’s the vibe where you are?'],
+            motivation: ['Ready to dive into a project?', 'Need another boost?'],
+            funfact: ['Want another fun fact?', 'How about something tech-related?'],
+            default: ['What’s something you’re curious about?', 'Want to talk tech or fun stuff?']
+        };
+
+        function getBotResponse(userInput) {
+            for (const [pattern, responses, category] of responsePairs) {
+                if (pattern.test(userInput)) {
+                    const response = responses[Math.floor(Math.random() * responses.length)];
+                    const followUp = followUpQuestions[category][Math.floor(Math.random() * followUpQuestions[category].length)];
+                    return `${response} ${followUp}`;
+                }
+            }
+            return "I’m confused, let’s try that again! What’s on your mind?";
+        }
+
+        function formatTime() {
+            const now = new Date();
+            return now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function typeMessage(text, element, callback) {
+            let index = 0;
+            element.textContent = '';
+            const typingInterval = setInterval(() => {
+                if (index < text.length) {
+                    element.textContent += text[index];
+                    index++;
+                } else {
+                    clearInterval(typingInterval);
+                    callback();
+                }
+            }, 30);
+        }
+
+        function addMessage(text, isUser) {
+            const chatWindow = document.getElementById('chatWindow');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user-message' : 'bot-message'}`;
+            messageDiv.innerHTML = `
+                <div class="avatar">${isUser ? '😊' : '🤖'}</div>
+                <div class="message-content">
+                    <span class="text"></span>
+                    <span class="timestamp">${formatTime()}</span>
+                </div>
+            `;
+            chatWindow.appendChild(messageDiv);
+            const textElement = messageDiv.querySelector('.text');
+            typeMessage(text, textElement, () => {
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            });
+        }
+
+        function sendMessage() {
+            const userInput = document.getElementById('userInput');
+            const sendButton = document.getElementById('sendButton');
+            const message = userInput.value.trim();
+            if (!message) return;
+
+            addMessage(message, true);
+            const botResponse = getBotResponse(message);
+            setTimeout(() => addMessage(botResponse, false), 500);
+
+            userInput.value = '';
+            sendButton.disabled = true;
+            userInput.focus();
+        }
+
+        function clearChat() {
+            const chatWindow = document.getElementById('chatWindow');
+            chatWindow.innerHTML = `
+                <div class="message bot-message">
+                    <div class="avatar">🤖</div>
+                    <div class="message-content">
+                        Hello! I'm Alex, your AI chatbot. Ask me about AI, engineering, hobbies, or anything fun! Try "what can I ask you" for ideas. What's something you're curious about today?
+                        <span class="timestamp">${formatTime()}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const button = document.querySelector('.theme-toggle');
+            button.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
+        }
+
+        // Enable/disable send button based on input
+        document.getElementById('userInput').addEventListener('input', (e) => {
+            document.getElementById('sendButton').disabled = !e.target.value.trim();
+        });
+
+        // Send message with Enter key
+        document.getElementById('userInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !document.getElementById('sendButton').disabled) {
+                sendMessage();
+            }
+        });
+
+        // Auto-focus input on load
+        document.getElementById('userInput').focus();
+    </script>
+</body>
+</html>
